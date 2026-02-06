@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrimeRoyale | Gemas de Clash Royale Baratas e Seguras</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .bg-royale-blue { background-color: #0f172a; }
+        .text-gold { color: #facc15; }
+        .bg-gold { background-color: #facc15; }
+        .bg-accent-orange { background-color: #f97316; }
+        .card-glow { box-shadow: 0 0 20px rgba(250, 204, 21, 0.2); }
+        .best-seller { transform: scale(1.05); z-index: 10; border: 3px solid #facc15; }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        .notification-enter { animation: slideIn 0.5s ease-out forwards; }
+        @keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .gradient-royale { background: linear-gradient(135deg, #1e3a8a 0%, #4c1d95 100%); }
+        
+        /* Chat Styles */
+        #chat-window { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(20px); opacity: 0; pointer-events: none; }
+        #chat-window.active { transform: translateY(0); opacity: 1; pointer-events: all; }
+        .message-bubble { max-width: 80%; border-radius: 18px; padding: 10px 14px; font-size: 14px; margin-bottom: 8px; line-height: 1.4; }
+        .bot-msg { background: #f1f5f9; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .user-msg { background: #1e3a8a; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .typing-dots span { width: 4px; height: 4px; background: #94a3b8; border-radius: 50%; display: inline-block; animation: typing 1s infinite italic; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+        /* Carrinho Lateral (Drawer) */
+        #cart-drawer { transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        #cart-drawer.active { transform: translateX(0); }
+        
+        /* Notificação Toast */
+        #toast { transform: translateY(100px); opacity: 0; transition: all 0.3s; }
+        #toast.show { transform: translateY(0); opacity: 1; }
+
+        /* LEAD POPUP */
+        #lead-popup { transition: opacity 0.3s ease; }
+        #lead-popup.hidden-modal { pointer-events: none; opacity: 0; }
+        #lead-popup.visible-modal { pointer-events: auto; opacity: 1; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 overflow-x-hidden">
+
+    <!-- BARRA DE URGÊNCIA (Funil de Vendas) -->
+    <div id="urgency-bar" class="hidden fixed top-16 w-full bg-red-600 text-white text-center py-2 text-xs font-bold z-40 shadow-md uppercase tracking-wide">
+        ⚠️ Seu carrinho está reservado por apenas <span id="cart-timer" class="text-gold text-sm font-black mx-1">10:00</span> minutos. Finalize agora!
+    </div>
+
+    <!-- Header Fixo -->
+    <header class="fixed top-0 w-full bg-royale-blue text-white z-50 border-b border-blue-900/50 backdrop-blur-md bg-opacity-90">
+        <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="goToHome()">
+                <span class="text-2xl font-extrabold tracking-tighter text-gold">PRIME<span class="text-white">ROYALE</span></span>
+            </div>
+            <nav class="hidden md:flex gap-8 font-semibold text-sm uppercase tracking-wider">
+                <a href="#" onclick="goToHome()" class="hover:text-gold transition">Início</a>
+                <a href="#pacotes" onclick="switchView()" class="hover:text-gold transition">Comprar</a>
+                <a href="#avaliacoes" onclick="switchView()" class="hover:text-gold transition">Avaliações</a>
+                <a href="javascript:void(0)" onclick="toggleChat()" class="hover:text-gold transition">Suporte</a>
+            </nav>
+            <div class="flex items-center gap-4">
+                <!-- Botão Carrinho Header -->
+                <button onclick="toggleCartDrawer()" class="relative p-2 hover:bg-white/10 rounded-full transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span id="cart-counter" class="absolute -top-1 -right-1 bg-accent-orange text-white text-[10px] font-bold h-5 w-5 flex items-center justify-center rounded-full border-2 border-royale-blue">0</span>
+                </button>
+                <a href="#pacotes" onclick="switchView()" class="hidden sm:block bg-gold text-blue-900 px-5 py-2 rounded-full font-bold text-sm hover:scale-105 transition shadow-lg uppercase">
+                    Comprar Agora
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Wrapper (Home View) -->
+    <div id="home-view">
+        <!-- Hero Section -->
+        <section class="pt-32 pb-16 gradient-royale text-white relative overflow-hidden">
+            <div class="container mx-auto px-4 relative z-10 text-center lg:text-left flex flex-col lg:flex-row items-center gap-12">
+                <div class="lg:w-1/2">
+                    <div class="inline-flex items-center gap-2 bg-blue-500/20 border border-blue-400/30 px-3 py-1 rounded-full text-xs font-bold text-blue-200 mb-6 uppercase tracking-widest">
+                        <span class="flex h-2 w-2 rounded-full bg-green-400 animate-pulse"></span> Sistema 100% Automatizado
+                    </div>
+                    <h1 class="text-4xl md:text-6xl font-extrabold leading-tight mb-6">
+                        Gemas de Clash Royale <span class="text-gold">Mais Baratas</span>, Entrega Rápida e Segura
+                    </h1>
+                    <p class="text-lg md:text-xl text-blue-100 mb-8 max-w-xl mx-auto lg:mx-0">
+                        Mais de <span class="font-bold text-white">15.000 jogadores</span> já economizaram na PrimeRoyale. Receba seus créditos em minutos com segurança total.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                        <a href="#pacotes" class="bg-accent-orange hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-extrabold text-xl shadow-2xl hover:scale-105 transition text-center uppercase">
+                            COMPRAR GEMAS AGORA
+                        </a>
+                    </div>
+                    <div class="mt-8 flex flex-wrap justify-center lg:justify-start gap-6 text-sm text-blue-200">
+                        <span class="flex items-center gap-2">✅ Pagamento Protegido</span>
+                        <span class="flex items-center gap-2">⚡ Entrega Expressa</span>
+                        <span class="flex items-center gap-2">🎧 Suporte 24h</span>
+                    </div>
+                </div>
+                <div class="lg:w-1/2 flex justify-center relative">
+                    <div class="relative w-72 h-72 md:w-96 md:h-96 animate-float">
+                        <div class="absolute inset-0 bg-gold rounded-full blur-3xl opacity-20"></div>
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="w-full h-full drop-shadow-2xl">
+                            <path fill="#facc15" d="M44.7,-76.4C58.2,-69.2,70,-58.5,77.7,-45.6C85.4,-32.7,89.1,-17.7,88.3,-2.8C87.4,12.1,82.1,26.9,73.4,39.6C64.7,52.3,52.7,62.9,39.2,69.9C25.7,76.9,10.6,80.3,-4.2,87.6C-19,94.9,-33.5,106.1,-46.2,103.1C-58.9,100.1,-69.8,82.9,-77.3,67C-84.8,51.1,-88.9,36.5,-90.6,22.1C-92.3,7.7,-91.6,-6.5,-87.3,-20.1C-83,-33.7,-75.1,-46.7,-64.1,-55.1C-53.1,-63.5,-39,-67.3,-25.5,-74.5C-12,-81.7,1,-92.3,14.7,-91.4C28.4,-90.5,44.7,-76.4,44.7,-76.4Z" transform="translate(100 100)" />
+                            <text x="50" y="115" font-size="60" filter="drop-shadow(2px 2px 2px rgba(0,0,0,0.5))">💎</text>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-16 bg-black/40 backdrop-blur-sm py-4 border-y border-white/10">
+                <div class="container mx-auto px-4 flex flex-col md:flex-row items-center justify-center gap-4 text-white font-bold uppercase tracking-wider text-sm">
+                    <span class="text-gold">🔥 Oferta por tempo limitado:</span>
+                    <div id="countdown" class="text-2xl font-mono tracking-tighter">00:00:00</div>
+                    <span>Restam apenas <span class="text-red-500">23 pacotes</span> promocionais hoje</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Social Proof -->
+        <div class="bg-white py-6 shadow-sm">
+            <div class="container mx-auto px-4 flex justify-center items-center gap-4">
+                <div class="flex -space-x-2">
+                    <img src="https://i.pravatar.cc/100?u=1" class="w-10 h-10 rounded-full border-2 border-white">
+                    <img src="https://i.pravatar.cc/100?u=2" class="w-10 h-10 rounded-full border-2 border-white">
+                    <img src="https://i.pravatar.cc/100?u=3" class="w-10 h-10 rounded-full border-2 border-white">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-xs font-bold text-blue-600">+9k</div>
+                </div>
+                <div class="text-sm font-medium">
+                    <div class="flex text-gold">★★★★★</div>
+                    <p>4.9/5 baseado em 15k+ clientes</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pacotes Section -->
+        <section id="pacotes" class="py-20 container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-extrabold mb-4 uppercase">Escolha seu Pacote de Gemas</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Selecione a quantidade desejada. Os preços abaixo são exclusivos para a PrimeRoyale.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Pacote 80 Gemas -->
+                <div class="bg-white rounded-3xl p-8 text-center border border-gray-100 shadow-xl flex flex-col items-center">
+                    <span class="text-4xl mb-4">🔹</span>
+                    <h3 class="text-2xl font-bold mb-2">80 Gemas</h3>
+                    <div class="text-gray-400 line-through text-sm">R$ 1,90</div>
+                    <div class="text-4xl font-extrabold text-blue-900 mb-2">R$ 1,10</div>
+                    <div class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold mb-6 italic">Economia de 42%</div>
+                    <button onclick="addToCart(1, '80 Gemas', 1.10, 1.90, '🔹')" class="w-full bg-blue-900 text-white py-4 rounded-xl font-bold hover:bg-blue-800 transition uppercase">Adicionar ao Carrinho</button>
+                </div>
+
+                <!-- Pacote 500 Gemas -->
+                <div class="bg-white rounded-3xl p-8 text-center border border-gray-100 shadow-xl flex flex-col items-center">
+                    <span class="text-4xl mb-4">💎</span>
+                    <h3 class="text-2xl font-bold mb-2">500 Gemas</h3>
+                    <div class="text-gray-400 line-through text-sm">R$ 12,90</div>
+                    <div class="text-4xl font-extrabold text-blue-900 mb-2">R$ 9,99</div>
+                    <div class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold mb-6 italic">Economia de 22%</div>
+                    <button onclick="addToCart(2, '500 Gemas', 9.99, 12.90, '💎')" class="w-full bg-blue-900 text-white py-4 rounded-xl font-bold hover:bg-blue-800 transition uppercase">Adicionar ao Carrinho</button>
+                </div>
+
+                <!-- Pacote 1.200 Gemas -->
+                <div class="bg-white rounded-3xl p-8 text-center border border-gray-100 shadow-xl flex flex-col items-center">
+                    <span class="text-4xl mb-4">💎💎</span>
+                    <h3 class="text-2xl font-bold mb-2">1.200 Gemas</h3>
+                    <div class="text-gray-400 line-through text-sm">R$ 24,99</div>
+                    <div class="text-4xl font-extrabold text-blue-900 mb-2">R$ 17,99</div>
+                    <div class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold mb-6 italic">Economia de 28%</div>
+                    <button onclick="addToCart(3, '1.200 Gemas', 17.99, 24.99, '💎💎')" class="w-full bg-blue-900 text-white py-4 rounded-xl font-bold hover:bg-blue-800 transition uppercase">Adicionar ao Carrinho</button>
+                </div>
+
+                <!-- Pacote 2.500 Gemas (MAIS VENDIDO) -->
+                <div class="bg-white rounded-3xl p-8 text-center border-4 border-gold shadow-2xl flex flex-col items-center best-seller relative">
+                    <div class="absolute -top-5 bg-gold text-blue-900 font-black px-6 py-2 rounded-full text-sm uppercase tracking-tighter">MAIS VENDIDO</div>
+                    <span class="text-5xl mb-4 animate-bounce">💎💎💎</span>
+                    <h3 class="text-2xl font-bold mb-2">2.500 Gemas</h3>
+                    <div class="text-gray-400 line-through text-sm">R$ 49,99</div>
+                    <div class="text-4xl font-extrabold text-blue-900 mb-2 text-gold-contrast">R$ 34,99</div>
+                    <div class="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold mb-6 animate-pulse">Economia de 30%</div>
+                    <button onclick="addToCart(4, '2.500 Gemas', 34.99, 49.99, '💎💎💎')" class="w-full bg-accent-orange text-white py-4 rounded-xl font-bold hover:bg-orange-600 transition shadow-lg text-lg uppercase">Adicionar ao Carrinho</button>
+                </div>
+
+                <!-- Pacote 6.500 Gemas -->
+                <div class="bg-white rounded-3xl p-8 text-center border border-gray-100 shadow-xl flex flex-col items-center">
+                    <span class="text-4xl mb-4">💰💎</span>
+                    <h3 class="text-2xl font-bold mb-2">6.500 Gemas</h3>
+                    <div class="text-gray-400 line-through text-sm">R$ 139,99</div>
+                    <div class="text-4xl font-extrabold text-blue-900 mb-2">R$ 119,99</div>
+                    <div class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold mb-6 italic">Economia de 14%</div>
+                    <button onclick="addToCart(5, '6.500 Gemas', 119.99, 139.99, '💰💎')" class="w-full bg-blue-900 text-white py-4 rounded-xl font-bold hover:bg-blue-800 transition uppercase">Adicionar ao Carrinho</button>
+                </div>
+
+                <!-- Pacote 14.000 Gemas -->
+                <div class="bg-white rounded-3xl p-8 text-center border border-gray-100 shadow-xl flex flex-col items-center">
+                    <span class="text-4xl mb-4">👑💎</span>
+                    <h3 class="text-2xl font-bold mb-2">14.000 Gemas</h3>
+                    <div class="text-gray-400 line-through text-sm">R$ 299,00</div>
+                    <div class="text-4xl font-extrabold text-blue-900 mb-2">R$ 149,00</div>
+                    <div class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold mb-6 italic">Economia de 50%</div>
+                    <button onclick="addToCart(6, '14.000 Gemas', 149.00, 299.00, '👑💎')" class="w-full bg-blue-900 text-white py-4 rounded-xl font-bold hover:bg-blue-800 transition uppercase">Adicionar ao Carrinho</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Benefícios -->
+        <section class="py-20 bg-gray-100">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 text-center">
+                    <div>
+                        <div class="w-16 h-16 bg-blue-900 rounded-2xl flex items-center justify-center text-white text-3xl mx-auto mb-6">⚡</div>
+                        <h4 class="font-bold text-xl mb-2">Automático</h4>
+                        <p class="text-gray-600 text-sm">Sistema conectado via Supercell ID para entrega instantânea.</p>
+                    </div>
+                    <div>
+                        <div class="w-16 h-16 bg-blue-900 rounded-2xl flex items-center justify-center text-white text-3xl mx-auto mb-6">🛡️</div>
+                        <h4 class="font-bold text-xl mb-2">100% Seguro</h4>
+                        <p class="text-gray-600 text-sm">Não precisamos da sua senha. Apenas sua TAG do jogo.</p>
+                    </div>
+                    <div>
+                        <div class="w-16 h-16 bg-blue-900 rounded-2xl flex items-center justify-center text-white text-3xl mx-auto mb-6">💳</div>
+                        <h4 class="font-bold text-xl mb-2">Pagamento</h4>
+                        <p class="text-gray-600 text-sm">Aceitamos Pix, Cartão e Boleto através do Mercado Pago.</p>
+                    </div>
+                    <div>
+                        <div class="w-16 h-16 bg-blue-900 rounded-2xl flex items-center justify-center text-white text-3xl mx-auto mb-6">💬</div>
+                        <h4 class="font-bold text-xl mb-2">Suporte 24h</h4>
+                        <p class="text-gray-600 text-sm">Time de prontidão para tirar qualquer dúvida.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Avaliações -->
+        <section id="avaliacoes" class="py-20 bg-royale-blue text-white">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-extrabold mb-2 uppercase italic">Quem já comprou, aprova!</h2>
+                    <p class="text-blue-200">Veja o que a comunidade Clash Royale está dizendo.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-blue-800/30 p-8 rounded-2xl border border-blue-700/50">
+                        <div class="text-gold mb-4 text-xl">★★★★★</div>
+                        <p class="italic mb-6">"Entrega muito rápida, recomendo. Achei que ia demorar por ser domingo, mas caiu em 5 minutos."</p>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gray-400"></div>
+                            <div>
+                                <p class="font-bold text-sm">Pedro S.</p>
+                                <p class="text-xs text-blue-300">Há 2 dias</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-blue-800/30 p-8 rounded-2xl border border-blue-700/50">
+                        <div class="text-gold mb-4 text-xl">★★★★★</div>
+                        <p class="italic mb-6">"Preço muito melhor que no jogo. Consegui comprar o pass royale e ainda sobrou gema pra bau."</p>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gray-400"></div>
+                            <div>
+                                <p class="font-bold text-sm">Marcos Silva</p>
+                                <p class="text-xs text-blue-300">Há 4 dias</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-blue-800/30 p-8 rounded-2xl border border-blue-700/50">
+                        <div class="text-gold mb-4 text-xl">★★★★★</div>
+                        <p class="italic mb-6">"Comprei várias vezes e sempre funciona. O suporte no WhatsApp é nota 10."</p>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gray-400"></div>
+                            <div>
+                                <p class="font-bold text-sm">Lucas Gamer</p>
+                                <p class="text-xs text-blue-300">Há 1 semana</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section id="faq" class="py-20 container mx-auto px-4 max-w-4xl">
+            <h2 class="text-3xl font-extrabold text-center mb-12 uppercase">Dúvidas Frequentes</h2>
+            <div class="space-y-4">
+                <details class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm cursor-pointer group">
+                    <summary class="font-bold text-lg flex justify-between items-center list-none">
+                        É seguro comprar na PrimeRoyale?
+                        <span class="group-open:rotate-180 transition">▼</span>
+                    </summary>
+                    <p class="mt-4 text-gray-600">Sim, utilizamos a API oficial para recargas. Suas informações estão 100% protegidas.</p>
+                </details>
+                <details class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm cursor-pointer group">
+                    <summary class="font-bold text-lg flex justify-between items-center list-none">
+                        Quanto tempo demora?
+                        <span class="group-open:rotate-180 transition">▼</span>
+                    </summary>
+                    <p class="mt-4 text-gray-600">Via Pix a entrega é automática em menos de 10 minutos.</p>
+                </details>
+            </div>
+        </section>
+    </div>
+
+    <!-- PÁGINA COMPLETA DO CARRINHO (Inicialmente Oculta) -->
+    <div id="cart-page-view" class="hidden pt-32 pb-20 container mx-auto px-4">
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Lista de Produtos -->
+            <div class="lg:w-2/3">
+                <div class="bg-white rounded-3xl shadow-xl p-6 md:p-10">
+                    <h2 class="text-3xl font-black mb-8 uppercase italic">Seu Pedido está quase finalizado! 🚀</h2>
+                    <div id="cart-page-items" class="space-y-6">
+                        <!-- Itens renderizados via JS -->
+                    </div>
+                    
+                    <div class="mt-10 pt-10 border-t flex flex-col md:flex-row justify-between items-center gap-6">
+                        <button onclick="goToHome()" class="text-blue-900 font-bold hover:underline flex items-center gap-2">
+                            ← Continuar Comprando
+                        </button>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="coupon-input" placeholder="Cupom de Desconto" class="bg-gray-100 px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-gold w-40">
+                            <button onclick="applyCoupon()" class="bg-gray-200 px-4 py-3 rounded-xl font-bold hover:bg-gray-300 transition text-sm">Aplicar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumo Financeiro -->
+            <div class="lg:w-1/3">
+                <div class="bg-white rounded-3xl shadow-xl p-8 sticky top-24">
+                    <h3 class="text-xl font-bold mb-6 uppercase tracking-tight">Resumo da Compra</h3>
+                    <div class="space-y-4 mb-8">
+                        <div class="flex justify-between text-gray-600">
+                            <span>Subtotal</span>
+                            <span id="page-subtotal">R$ 0,00</span>
+                        </div>
+                        <div class="flex justify-between text-green-600 font-bold">
+                            <span>Você economizou</span>
+                            <span id="page-savings">- R$ 0,00</span>
+                        </div>
+                        <div class="flex justify-between text-purple-600 font-bold hidden" id="coupon-row">
+                            <span>Cupom Aplicado</span>
+                            <span id="coupon-val">- R$ 0,00</span>
+                        </div>
+                        <div class="pt-4 border-t flex justify-between items-center">
+                            <span class="text-2xl font-black">TOTAL</span>
+                            <span class="text-3xl font-black text-blue-900" id="page-total">R$ 0,00</span>
+                        </div>
+                    </div>
+                    
+                    <button onclick="openCheckoutModalFromPage()" class="w-full bg-accent-orange text-white py-5 rounded-2xl font-black text-xl shadow-2xl hover:scale-105 transition uppercase mb-4">
+                        Finalizar Compra
+                    </button>
+                    
+                    <div class="text-center">
+                        <p class="text-[11px] text-gray-400 font-medium">Pagamento Seguro • Entrega Rápida • Suporte 24h</p>
+                        <div class="flex justify-center gap-2 mt-4 opacity-30 grayscale">
+                            <img src="https://logospng.org/download/pix/logo-pix-1024.png" class="h-4" alt="Pix">
+                            <img src="https://logodownload.org/wp-content/uploads/2014/07/mastercard-logo-7.png" class="h-4" alt="Mastercard">
+                            <img src="https://logodownload.org/wp-content/uploads/2014/04/visa-logo-1.png" class="h-4" alt="Visa">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MINI-CARRINHO LATERAL (DRAWER) -->
+    <div id="cart-drawer-overlay" onclick="toggleCartDrawer()" class="fixed inset-0 bg-black/60 z-[60] hidden backdrop-blur-sm"></div>
+    <div id="cart-drawer" class="fixed top-0 right-0 h-full w-full max-w-sm bg-white z-[70] shadow-2xl flex flex-col">
+        <div class="bg-royale-blue p-6 text-white flex justify-between items-center">
+            <h3 class="font-black text-xl uppercase italic">Meu Carrinho</h3>
+            <button onclick="toggleCartDrawer()" class="text-white/50 hover:text-white text-2xl">✕</button>
+        </div>
+        
+        <div id="drawer-items" class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
+            <!-- Itens via JS -->
+        </div>
+
+        <div class="p-6 border-t bg-white">
+            <div class="flex justify-between mb-4 font-black">
+                <span class="text-gray-500">SUBTOTAL:</span>
+                <span class="text-blue-900" id="drawer-subtotal">R$ 0,00</span>
+            </div>
+            <div class="grid grid-cols-1 gap-3">
+                <button onclick="goToCartPage()" class="w-full bg-blue-900 text-white py-4 rounded-xl font-bold uppercase hover:bg-blue-800">Ver Carrinho Completo</button>
+                <button onclick="openCheckoutModalFromPage()" class="w-full bg-accent-orange text-white py-4 rounded-xl font-black uppercase shadow-lg hover:scale-105 transition">Checkout Rápido</button>
+                <button onclick="toggleCartDrawer()" class="text-xs text-gray-400 font-bold uppercase mt-2">Continuar Comprando</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificação Toast -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[200] bg-green-600 text-white px-6 py-3 rounded-full font-bold shadow-2xl flex items-center gap-3 w-max">
+        <span class="text-xl">💎</span> <span id="toast-msg">Produto adicionado ao carrinho!</span>
+    </div>
+
+    <!-- Notificação de Venda (Simulada) -->
+    <div id="sale-notification" class="fixed bottom-24 left-4 z-50 hidden md:flex items-center gap-3 bg-white p-3 rounded-xl shadow-2xl border border-gray-100 notification-enter max-w-xs">
+        <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">✓</div>
+        <div class="text-xs">
+            <p class="font-bold"><span id="notif-name">Gabriel</span> acabou de comprar</p>
+            <p class="text-gray-500"><span id="notif-item">2.500 Gemas</span></p>
+        </div>
+    </div>
+
+    <!-- POPUP DE CAPTURA DE LEAD -->
+    <div id="lead-popup" class="fixed inset-0 bg-black/70 z-[300] hidden-modal flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 relative shadow-2xl overflow-hidden text-center">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-900 via-purple-600 to-gold"></div>
+            <button onclick="closeLeadPopup()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
+            
+            <div class="mb-6">
+                <span class="text-5xl">🎁</span>
+            </div>
+            <h3 class="text-2xl font-black mb-2 uppercase text-blue-900">Desconto Exclusivo!</h3>
+            <p class="text-gray-600 mb-6">Cadastre-se agora e ganhe um cupom de <span class="font-bold text-accent-orange">10% OFF</span> na sua primeira compra de gemas.</p>
+            
+            <form id="lead-form" onsubmit="event.preventDefault(); submitLead();" class="space-y-4">
+                <input type="text" placeholder="Seu WhatsApp ou E-mail" class="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl focus:ring-2 focus:ring-gold outline-none" required>
+                <button type="submit" class="w-full bg-blue-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-800 transition uppercase shadow-lg">
+                    Receber Cupom Agora
+                </button>
+            </form>
+            <p onclick="closeLeadPopup()" class="mt-4 text-xs text-gray-400 cursor-pointer hover:underline">Não quero desconto, prefiro pagar mais caro.</p>
+        </div>
+    </div>
+
+    <!-- SUPORTE CHATBOT -->
+    <div id="chat-bubble" onclick="toggleChat()" class="fixed bottom-6 right-6 md:bottom-10 md:right-10 w-16 h-16 bg-blue-900 rounded-full flex items-center justify-center text-white text-3xl shadow-2xl cursor-pointer hover:scale-110 transition z-[100] border-4 border-gold/30">💬</div>
+    <div id="chat-window" class="fixed bottom-24 right-6 md:bottom-28 md:right-10 w-[90vw] md:w-96 h-[500px] bg-white rounded-3xl shadow-2xl flex flex-col z-[100] overflow-hidden border border-gray-100">
+        <div class="bg-blue-900 p-4 text-white flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-blue-900 text-xl font-bold">👑</div>
+                <div><p class="font-bold text-sm">RoyalBot - Suporte</p></div>
+            </div>
+            <button onclick="toggleChat()" class="text-white/50 hover:text-white">✕</button>
+        </div>
+        <div id="chat-messages" class="flex-1 p-4 overflow-y-auto flex flex-col gap-2 bg-gray-50">
+            <div class="message-bubble bot-msg">Olá! Sou o assistente da PrimeRoyale. Como posso ajudar?</div>
+        </div>
+        <div id="typing-indicator" class="px-4 py-2 hidden"><div class="message-bubble bot-msg typing-dots"><span></span><span></span><span></span></div></div>
+        <div class="p-4 border-t bg-white"><div class="flex gap-2"><input type="text" id="chat-input" placeholder="Digite sua dúvida..." class="flex-1 bg-gray-100 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-900 outline-none"><button onclick="sendChatMessage()" class="bg-blue-900 text-white p-3 rounded-xl">🚀</button></div></div>
+    </div>
+
+    <!-- Modal de Checkout (Simulado) -->
+    <div id="checkout-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 relative shadow-2xl overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gold"></div>
+            <button onclick="closeCheckout()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
+            <h3 class="text-2xl font-bold mb-2 uppercase">Finalizar Compra</h3>
+            <p class="text-xs text-gray-500 mb-6 uppercase font-bold tracking-tighter">Pagamento processado com segurança</p>
+            <form class="space-y-4" onsubmit="event.preventDefault(); successPurchase();">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Seu Player TAG</label>
+                    <input type="text" placeholder="#9G2YY8L" class="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl focus:ring-2 focus:ring-gold outline-none font-mono" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">E-mail para confirmação</label>
+                    <input type="email" placeholder="seuemail@exemplo.com" class="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl focus:ring-2 focus:ring-gold outline-none" required>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 flex justify-between font-bold">
+                    <span>Total:</span>
+                    <span class="text-xl text-blue-900" id="checkout-total-val">R$ 0,00</span>
+                </div>
+                <button type="submit" class="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 transition uppercase shadow-xl">Pagar com PIX Agora</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts do Carrinho e Geral -->
+    <script>
+        // --- PAINEL DE CONTROLE INTERNO (CONFIGURAÇÃO) ---
+        const FunnelConfig = {
+            popupDelay: 8000, // Tempo para exibir popup de lead (ms)
+            abandonmentTime: 1000 * 60 * 30, // 30 minutos para considerar carrinho abandonado
+            reservationTime: 600, // 10 minutos (em segundos) para a barra de urgência
+            welcomeCoupon: "PRIME10",
+            recoveryCoupon: "VOLTEI5",
+            welcomeDiscount: 0.10, // 10%
+            recoveryDiscount: 0.05, // 5% extra
+            features: {
+                leadPopup: true,
+                urgencyBar: true,
+                remarketing: true
+            }
+        };
+
+        // --- NAVEGAÇÃO ---
+        function goToHome() {
+            document.getElementById('home-view').classList.remove('hidden');
+            document.getElementById('cart-page-view').classList.add('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function switchView() {
+            document.getElementById('home-view').classList.remove('hidden');
+            document.getElementById('cart-page-view').classList.add('hidden');
+            // Não rola para o topo para permitir que a âncora funcione nativamente
+        }
+
+        // --- LOGICA DO CARRINHO ---
+        let cart = JSON.parse(localStorage.getItem('prime_cart')) || [];
+        let appliedCoupon = null;
+
+        function saveCart() {
+            localStorage.setItem('prime_cart', JSON.stringify(cart));
+            // Salva timestamp para lógica de abandono
+            localStorage.setItem('prime_cart_time', Date.now());
+            updateUI();
+        }
+
+        function addToCart(id, name, price, oldPrice, icon) {
+            const index = cart.findIndex(item => item.id === id);
+            if (index > -1) {
+                cart[index].quantity += 1;
+            } else {
+                cart.push({ id, name, price, oldPrice, icon, quantity: 1 });
+            }
+            showToast("Produto adicionado ao carrinho!");
+            saveCart();
+            // Ativa barra de urgência se tiver itens
+            if (cart.length > 0 && FunnelConfig.features.urgencyBar) {
+                document.getElementById('urgency-bar').classList.remove('hidden');
+            }
+            if(!document.getElementById('cart-drawer').classList.contains('active')) {
+                toggleCartDrawer();
+            }
+        }
+
+        function changeQuantity(id, delta) {
+            const index = cart.findIndex(item => item.id === id);
+            if (index > -1) {
+                cart[index].quantity += delta;
+                if (cart[index].quantity <= 0) {
+                    cart.splice(index, 1);
+                }
+                saveCart();
+            }
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            saveCart();
+        }
+
+        function applyCoupon() {
+            const code = document.getElementById('coupon-input').value.trim().toUpperCase();
+            if (code === FunnelConfig.welcomeCoupon) {
+                appliedCoupon = { code: code, discount: FunnelConfig.welcomeDiscount };
+                showToast("Cupom PRIME10 aplicado!");
+            } else if (code === FunnelConfig.recoveryCoupon) {
+                appliedCoupon = { code: code, discount: FunnelConfig.recoveryDiscount };
+                showToast("Cupom de retorno aplicado!");
+            } else {
+                alert("Cupom inválido");
+                return;
+            }
+            updateUI();
+        }
+
+        function updateUI() {
+            const counter = document.getElementById('cart-counter');
+            const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+            counter.textContent = totalItems;
+
+            if (cart.length > 0 && FunnelConfig.features.urgencyBar) {
+                document.getElementById('urgency-bar').classList.remove('hidden');
+            } else {
+                document.getElementById('urgency-bar').classList.add('hidden');
+            }
+
+            // Render Drawer & Page Logic
+            const drawerContainer = document.getElementById('drawer-items');
+            const drawerSubtotal = document.getElementById('drawer-subtotal');
+            let subtotal = 0;
+            let totalOld = 0;
+
+            // Gera HTML para Drawer e Página
+            const itemsHTML = cart.map(item => {
+                subtotal += item.price * item.quantity;
+                totalOld += item.oldPrice * item.quantity;
+                
+                // HTML Drawer
+                return `
+                <div class="bg-white p-4 rounded-2xl flex items-center gap-4 border border-gray-100 shadow-sm mb-3">
+                    <div class="text-2xl">${item.icon}</div>
+                    <div class="flex-1">
+                        <p class="font-bold text-sm">${item.name}</p>
+                        <p class="text-blue-900 font-black text-sm">R$ ${item.price.toFixed(2)}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="changeQuantity(${item.id}, -1)" class="w-6 h-6 bg-gray-100 rounded-full font-bold">-</button>
+                        <span class="font-bold text-sm">${item.quantity}</span>
+                        <button onclick="changeQuantity(${item.id}, 1)" class="w-6 h-6 bg-gray-100 rounded-full font-bold">+</button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            // Drawer
+            if (cart.length === 0) {
+                drawerContainer.innerHTML = `<div class="text-center py-20 text-gray-400 font-bold uppercase text-xs">Seu carrinho está vazio</div>`;
+            } else {
+                drawerContainer.innerHTML = itemsHTML;
+            }
+            drawerSubtotal.textContent = `R$ ${subtotal.toFixed(2)}`;
+
+            // Página do Carrinho
+            const pageContainer = document.getElementById('cart-page-items');
+            if (pageContainer) {
+                if (cart.length === 0) {
+                    pageContainer.innerHTML = `<div class="text-center py-10 font-bold text-gray-400">Nenhum item adicionado</div>`;
+                } else {
+                    // Renderiza lista detalhada
+                    pageContainer.innerHTML = cart.map(item => `
+                    <div class="flex items-center justify-between py-4 border-b last:border-0">
+                        <div class="flex items-center gap-6">
+                            <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl shadow-inner">${item.icon}</div>
+                            <div>
+                                <h4 class="font-black text-lg uppercase">${item.name}</h4>
+                                <p class="text-gray-400 text-xs font-bold">PREÇO UNITÁRIO: R$ ${item.price.toFixed(2)}</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col md:flex-row items-center gap-4 md:gap-12">
+                            <div class="flex items-center gap-4 bg-gray-100 px-4 py-2 rounded-xl">
+                                <button onclick="changeQuantity(${item.id}, -1)" class="font-bold text-lg hover:text-accent-orange">-</button>
+                                <span class="font-black w-4 text-center">${item.quantity}</span>
+                                <button onclick="changeQuantity(${item.id}, 1)" class="font-bold text-lg hover:text-accent-orange">+</button>
+                            </div>
+                            <div class="text-right min-w-[100px]">
+                                <p class="font-black text-xl text-blue-900">R$ ${(item.price * item.quantity).toFixed(2)}</p>
+                                <button onclick="removeFromCart(${item.id})" class="text-[10px] text-red-500 font-bold uppercase hover:underline">Remover</button>
+                            </div>
+                        </div>
+                    </div>
+                    `).join('');
+                }
+
+                // Cálculos Finais
+                let finalTotal = subtotal;
+                if (appliedCoupon) {
+                    const discountVal = subtotal * appliedCoupon.discount;
+                    finalTotal = subtotal - discountVal;
+                    document.getElementById('coupon-row').classList.remove('hidden');
+                    document.getElementById('coupon-val').textContent = `- R$ ${discountVal.toFixed(2)}`;
+                } else {
+                    document.getElementById('coupon-row')?.classList.add('hidden');
+                }
+
+                document.getElementById('page-subtotal').textContent = `R$ ${subtotal.toFixed(2)}`;
+                document.getElementById('page-savings').textContent = `- R$ ${(totalOld - finalTotal).toFixed(2)}`;
+                document.getElementById('page-total').textContent = `R$ ${finalTotal.toFixed(2)}`;
+                document.getElementById('checkout-total-val').textContent = `R$ ${finalTotal.toFixed(2)}`;
+            }
+        }
+
+        function toggleCartDrawer() {
+            document.getElementById('cart-drawer').classList.toggle('active');
+            document.getElementById('cart-drawer-overlay').classList.toggle('hidden');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            if(msg) document.getElementById('toast-msg').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function goToCartPage() {
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('cart-page-view').classList.remove('hidden');
+            document.getElementById('cart-drawer').classList.remove('active');
+            document.getElementById('cart-drawer-overlay').classList.add('hidden');
+            window.scrollTo(0, 0);
+            updateUI();
+        }
+
+        function goToHome() {
+            document.getElementById('home-view').classList.remove('hidden');
+            document.getElementById('cart-page-view').classList.add('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        // --- SISTEMA DE CAPTURA DE LEAD ---
+        function initLeadCapture() {
+            if (!FunnelConfig.features.leadPopup) return;
+            // Verifica se já capturou lead
+            if (localStorage.getItem('prime_lead_captured')) return;
+
+            setTimeout(() => {
+                const popup = document.getElementById('lead-popup');
+                popup.classList.remove('hidden-modal');
+                popup.classList.add('visible-modal');
+            }, FunnelConfig.popupDelay);
+        }
+
+        function closeLeadPopup() {
+            const popup = document.getElementById('lead-popup');
+            popup.classList.remove('visible-modal');
+            popup.classList.add('hidden-modal');
+            // Marca como visto para não encher o saco de novo na mesma sessão, 
+            // mas idealmente seria persistente. Vamos marcar persistente.
+            localStorage.setItem('prime_lead_captured', 'dismissed'); 
+        }
+
+        function submitLead() {
+            const popup = document.getElementById('lead-popup');
+            // Using copyToClipboard instead of navigator.clipboard.writeText
+            popup.innerHTML = `
+                <div class="text-center py-8">
+                    <span class="text-5xl">🎉</span>
+                    <h3 class="text-2xl font-black mt-4 mb-2 text-blue-900">Cupom Liberado!</h3>
+                    <p class="text-gray-600 mb-6">Use o código abaixo no carrinho:</p>
+                    <div class="bg-gray-100 p-4 rounded-xl border-2 border-dashed border-gold text-2xl font-mono font-black text-blue-900 select-all cursor-pointer" onclick="copyToClipboard('${FunnelConfig.welcomeCoupon}')">
+                        ${FunnelConfig.welcomeCoupon}
+                    </div>
+                    <button onclick="closeLeadPopup()" class="mt-6 text-sm text-gray-400 font-bold hover:text-gray-600">Fechar</button>
+                </div>
+            `;
+            localStorage.setItem('prime_lead_captured', 'true');
+        }
+
+        // Function to replace navigator.clipboard.writeText
+        function copyToClipboard(text) {
+            const tempInput = document.createElement("textarea");
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            try {
+                document.execCommand("copy");
+                showToast('Copiado!');
+            } catch (e) {
+                console.error("Falha ao copiar", e);
+                // Fallback attempt just in case, though execCommand is usually the fallback
+                try {
+                     navigator.clipboard.writeText(text).then(() => showToast('Copiado!'));
+                } catch (e2) {
+                    showToast('Copie manualmente: ' + text);
+                }
+            }
+            document.body.removeChild(tempInput);
+        }
+
+        // --- SISTEMA DE REMARKETING INTERNO & ABANDONO ---
+        function checkAbandonment() {
+            if (!FunnelConfig.features.remarketing) return;
+            const lastTime = localStorage.getItem('prime_cart_time');
+            const hasCart = cart.length > 0;
+
+            if (hasCart && lastTime) {
+                const now = Date.now();
+                const diff = now - parseInt(lastTime);
+
+                // Se passou do tempo de abandono (ex: 30 min)
+                if (diff > FunnelConfig.abandonmentTime) {
+                    // Remarketing: Carrinho recuperado com oferta
+                    showToast("🎁 Desconto especial liberado para concluir sua compra!");
+                    // Auto-aplica cupom de recuperação visualmente ou sugere
+                    setTimeout(() => {
+                        const notif = document.getElementById('sale-notification');
+                        if (notif) {
+                            notif.querySelector('#notif-name').textContent = "Oferta Especial";
+                            notif.querySelector('#notif-item').textContent = "Use VOLTEI5 para 5% OFF";
+                            notif.classList.remove('hidden');
+                        }
+                    }, 2000);
+                } else if (diff > 1000 * 60) {
+                    // Apenas avisa que o carrinho está salvo
+                    showToast("👋 Bem-vindo de volta! Seu carrinho está salvo.");
+                }
+            }
+        }
+
+        // --- MÉTODOS DE CHECKOUT ---
+        function openCheckoutModalFromPage() {
+            if(cart.length === 0) return alert("Seu carrinho está vazio!");
+            document.getElementById('checkout-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeCheckout() {
+            document.getElementById('checkout-modal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        function successPurchase() {
+            const modal = document.querySelector('#checkout-modal > div');
+            modal.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">✓</div>
+                    <h3 class="text-2xl font-bold mb-4 uppercase">Pedido Gerado!</h3>
+                    <p class="text-gray-600 mb-6 italic font-bold">Escaneie o QR Code no seu banco para aprovação imediata.</p>
+                    <div class="bg-gray-100 p-8 rounded-xl mb-6 flex items-center justify-center">
+                        <div class="w-48 h-48 bg-black"></div>
+                    </div>
+                    <button onclick="location.reload()" class="bg-blue-900 text-white px-8 py-3 rounded-xl font-bold uppercase">Finalizar e Limpar Carrinho</button>
+                </div>
+            `;
+            cart = [];
+            localStorage.removeItem('prime_cart');
+            localStorage.removeItem('prime_cart_time');
+        }
+
+        // --- LÓGICA DO CHATBOT ---
+        function toggleChat() { document.getElementById('chat-window').classList.toggle('active'); }
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+            addMessage(text, 'user');
+            input.value = '';
+            const typing = document.getElementById('typing-indicator');
+            typing.classList.remove('hidden');
+            setTimeout(() => {
+                typing.classList.add('hidden');
+                addMessage(getBotResponse(text), 'bot');
+            }, 1000);
+        }
+        function addMessage(text, sender) {
+            const container = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = `message-bubble ${sender === 'bot' ? 'bot-msg' : 'user-msg'}`;
+            div.textContent = text;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+        function getBotResponse(input) {
+            const msg = input.toLowerCase();
+            if (msg.includes("seguro")) return "Totalmente seguro! Utilizamos a API oficial da Supercell para envios diretos.";
+            if (msg.includes("tempo")) return "Pagamentos via Pix são aprovados na hora e as gemas caem em até 10 minutos.";
+            if (msg.includes("cupom") || msg.includes("desconto")) return "Se é sua primeira vez, aguarde um pouco que temos uma surpresa! Ou use PRIME10 se já tiver.";
+            if (msg.includes("tag")) return "Sua TAG fica no seu perfil do jogo, logo abaixo do nome. Exemplo: #9G2YY8L.";
+            return "Desculpe, não entendi. Gostaria de saber sobre segurança, prazos ou como achar sua TAG?";
+        }
+
+        // --- TIMER GERAL E URGÊNCIA ---
+        function startTimer(duration, display) {
+            let timer = duration;
+            setInterval(() => {
+                let h = parseInt(timer / 3600, 10);
+                let m = parseInt((timer % 3600) / 60, 10);
+                let s = parseInt(timer % 60, 10);
+                // Atualiza display do Hero (se existir)
+                if(display) display.textContent = `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+                if (--timer < 0) timer = duration;
+            }, 1000);
+        }
+        
+        function startUrgencyTimer() {
+            let timer = FunnelConfig.reservationTime;
+            const urgencyDisplay = document.getElementById('cart-timer');
+            setInterval(() => {
+                if (cart.length > 0) {
+                    let m = parseInt(timer / 60, 10);
+                    let s = parseInt(timer % 60, 10);
+                    urgencyDisplay.textContent = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+                    if (--timer < 0) timer = 0; // Para no 0
+                }
+            }, 1000);
+        }
+
+        // --- INICIALIZAÇÃO ---
+        window.onload = function () {
+            startTimer(60 * 165, document.querySelector('#countdown'));
+            startUrgencyTimer();
+            updateUI();
+            checkAbandonment();
+            initLeadCapture();
+
+            // Notificações de Venda (Simulação)
+            setInterval(() => {
+                const notif = document.getElementById('sale-notification');
+                if (!notif) return;
+                const name = names[Math.floor(Math.random() * names.length)];
+                const item = itemsList[Math.floor(Math.random() * itemsList.length)];
+                const nameEl = notif.querySelector('#notif-name');
+                const itemEl = notif.querySelector('#notif-item');
+                if (nameEl) nameEl.textContent = name;
+                if (itemEl) itemEl.textContent = item;
+                notif.classList.remove('hidden');
+                setTimeout(() => notif.classList.add('hidden'), 5000);
+            }, 15000);
+        };
+        const names = [
+            "Lucas Ferreira", "Mariana Santos", "Gabriel Oliveira", "Ana Clara Souza", "Matheus Costa", "Juliana Rodrigues", 
+            "Rafael Alves", "Beatriz Lima", "Bruno Martins", "Camila Gomes", "Carlos Henrique Barros", "Larissa Teixeira", 
+            "Diego Ribeiro", "Fernanda Cardoso", "Felipe Batista", "Patrícia Monteiro", "André Nogueira", "Amanda Rocha", 
+            "Vinícius Duarte", "Isabela Freitas", "Eduardo Campos", "Natália Pacheco", "Thiago Araújo", "Gabriela Farias", 
+            "Pedro Henrique Tavares", "Carolina Mendes", "Daniel Barbosa", "Letícia Neves", "Gustavo Peixoto", "Aline Azevedo", 
+            "Fernando Prado", "Bruna Matos", "Marcelo Lacerda", "Renata Vieira", "Rodrigo Siqueira", "Vanessa Queiroz", 
+            "Victor Guedes", "Tatiane Paiva", "Leandro Bastos", "Jéssica Rezende", "Alexandre Cavalcante", "Elaine Andrade", 
+            "Caio Moraes", "Paula Carvalho", "Patrick Torres", "Simone Silveira", "Leonardo Aguiar", "Cristiane Correia", 
+            "Guilherme Antunes", "Rafaela Coelho", "Otávio Figueiredo", "Daniele Pontes", "Marcos Vinicius Valente", 
+            "Milena Dantas", "Samuel Brito", "Débora Coutinho", "Alan Brandão", "Bianca Damasceno", "Nathan Santana", 
+            "Carla Chaves", "Roberto Viana", "Luciana Fonseca", "Danilo Guimarães", "Monique Macedo", "Hugo Pires", 
+            "Daniela Esteves", "César Cunha", "Priscila Sarmento", "Paulo Sérgio Mendonça", "Flávia Rezende", "Jean Veloso", 
+            "Talita Moura", "Ricardo Furtado", "Karla Lemos", "Cláudio Bastos", "Mayara Franco", "Murilo Pinheiro", 
+            "Sabrina Torres", "Luan Paes", "Roberta Medeiros", "Heitor Ramos", "Evelyn Matias", "Kelvin Pinho", 
+            "Tatiana Cavalcante", "Jefferson Castro", "Viviane Menezes", "Mateus Fernandes", "Alessandra Domingues", 
+            "Fabrício Lopes", "Lorena Batista", "Pablo Teles", "Raquel Lins", "Eric Antunes", "Daiane Falcão", "Allan Medeiros", 
+            "Camille Nascimento", "Douglas Martins", "Natasha Guimarães", "Isaac Castro", "Helena Duarte", "Arthur Rodrigues", 
+            "Isadora Pires", "Breno Cardoso", "Nicole Andrade"
+        ];
+        const itemsList = ["80 Gemas", "500 Gemas", "1.200 Gemas", "2.500 Gemas"];
+    </script>
+</body>
+</html>
